@@ -1,4 +1,4 @@
-package io.github.aguinaldoneto.vendas.controller;
+package io.github.aguinaldoneto.vendas.rest.controller;
 
 import io.github.aguinaldoneto.vendas.entity.Cliente;
 import io.github.aguinaldoneto.vendas.repository.ClienteRepository;
