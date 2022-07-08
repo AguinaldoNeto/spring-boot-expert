@@ -1,6 +1,7 @@
 package io.github.aguinaldoneto.vendas.rest.controller;
 
 import io.github.aguinaldoneto.vendas.entity.Pedido;
+import io.github.aguinaldoneto.vendas.rest.dto.PedidoDTO;
 import io.github.aguinaldoneto.vendas.service.PedidoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,8 +19,9 @@ public class PedidoController {
 
     @PostMapping
     @ResponseStatus(CREATED)
-    public Pedido save(@RequestBody Pedido pedido) {
-        return service.save(pedido);
+    public Integer save(@RequestBody PedidoDTO dto) {
+        Pedido pedido = service.salvar(dto);
+        return pedido.getId();
     }
 
     @GetMapping("/{id}")

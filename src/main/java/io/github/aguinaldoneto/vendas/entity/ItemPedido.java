@@ -1,9 +1,16 @@
 package io.github.aguinaldoneto.vendas.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 
 @Entity
-@Table
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "item_pedido")
 public class ItemPedido {
 
     @Id
