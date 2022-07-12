@@ -1,20 +1,29 @@
 package io.github.aguinaldoneto.vendas.rest.controller;
 
+import io.github.aguinaldoneto.vendas.entity.ItemPedido;
 import io.github.aguinaldoneto.vendas.entity.Pedido;
+import io.github.aguinaldoneto.vendas.rest.dto.InformacaoItemPedidoDTO;
+import io.github.aguinaldoneto.vendas.rest.dto.InformacoesPedidoDTO;
 import io.github.aguinaldoneto.vendas.rest.dto.PedidoDTO;
 import io.github.aguinaldoneto.vendas.service.PedidoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import static org.springframework.http.HttpStatus.*;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.http.HttpStatus.CREATED;
 
 @RestController
 @RequestMapping("/api/pedidos")
 public class PedidoController {
 
-    @Autowired
+    @Autowired(required = false)
     private PedidoService service;
 
     @PostMapping
@@ -25,31 +34,38 @@ public class PedidoController {
     }
 
     @GetMapping("/{id}")
-    public Pedido getById(@PathVariable Integer id) {
+    public InformacoesPedidoDTO getById(@PathVariable Integer id) {
         return service
-                .findById(id)
+                .obterPedidoCompleto(id)
+                .map(p -> converter(p))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "O pedido não foi encontrado."));
     }
 
-    @PutMapping
-    @ResponseStatus(NO_CONTENT)
-    public void updatePedido(@PathVariable Integer id, @RequestBody Pedido pedido) {
-        service.findById(id)
-                .map(pedidoExistente -> {
-                    pedido.setId(pedidoExistente.getId());
-                    return Void.TYPE;
-                })
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "O pedido não foi encontrado."));
+    private InformacoesPedidoDTO converter(Pedido pedido) {
+        InformacoesPedidoDTO pedidosDto = InformacoesPedidoDTO.builder()
+                .codigo(pedido.getId())
+                .cpf(pedido.getCliente().getCpf())
+                .nomeCliente(pedido.getCliente().getNome())
+                .dataPedido(pedido.getDataPedido().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                .total(pedido.getTotal())
+                .items(converterItensPedido(pedido.getItens()))
+                .build();
+
+        return pedidosDto;
     }
 
-    @DeleteMapping
-    @ResponseStatus(NO_CONTENT)
-    public void deletarPedido(@PathVariable Integer id) {
-        service.findById(id)
-                .map(pedidoExistente -> {
-                    repository.delete(pedidoExistente);
-                    return Void.TYPE;
-                })
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "O pedido não foi encontrado."));
+    private List<InformacaoItemPedidoDTO> converterItensPedido(List<ItemPedido> itens) {
+        if (CollectionUtils.isEmpty(itens)) {
+            return Collections.emptyList();
+        }
+
+        return itens.stream()
+                .map(itemPedido -> InformacaoItemPedidoDTO.builder()
+                        .descricaoProduto(itemPedido.getProduto().getDescricao())
+                        .precoUnitario(itemPedido.getProduto().getPreco())
+                        .quantidade(itemPedido.getQuantidade()).build())
+                .collect(Collectors.toList());
+
     }
+
 }
