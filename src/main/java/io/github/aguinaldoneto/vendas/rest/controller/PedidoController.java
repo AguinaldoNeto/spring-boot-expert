@@ -2,6 +2,8 @@ package io.github.aguinaldoneto.vendas.rest.controller;
 
 import io.github.aguinaldoneto.vendas.entity.ItemPedido;
 import io.github.aguinaldoneto.vendas.entity.Pedido;
+import io.github.aguinaldoneto.vendas.enums.StatusPedido;
+import io.github.aguinaldoneto.vendas.rest.dto.AtualizacaoStatusPedidoDTO;
 import io.github.aguinaldoneto.vendas.rest.dto.InformacaoItemPedidoDTO;
 import io.github.aguinaldoneto.vendas.rest.dto.InformacoesPedidoDTO;
 import io.github.aguinaldoneto.vendas.rest.dto.PedidoDTO;
@@ -41,6 +43,12 @@ public class PedidoController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "O pedido não foi encontrado."));
     }
 
+    @PatchMapping("{/id}")
+    public void updateStatus(@RequestParam Integer id, @RequestBody AtualizacaoStatusPedidoDTO dto) {
+        String novoStatusPedido = dto.getNovoStatusPedido();
+        service.atualizaStatus(id, StatusPedido.valueOf(novoStatusPedido));
+    }
+
     private InformacoesPedidoDTO converter(Pedido pedido) {
         InformacoesPedidoDTO pedidosDto = InformacoesPedidoDTO.builder()
                 .codigo(pedido.getId())
@@ -48,6 +56,7 @@ public class PedidoController {
                 .nomeCliente(pedido.getCliente().getNome())
                 .dataPedido(pedido.getDataPedido().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
                 .total(pedido.getTotal())
+                .status(pedido.getStatus().name())
                 .items(converterItensPedido(pedido.getItens()))
                 .build();
 

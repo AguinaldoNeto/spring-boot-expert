@@ -4,6 +4,8 @@ import io.github.aguinaldoneto.vendas.entity.Cliente;
 import io.github.aguinaldoneto.vendas.entity.ItemPedido;
 import io.github.aguinaldoneto.vendas.entity.Pedido;
 import io.github.aguinaldoneto.vendas.entity.Produto;
+import io.github.aguinaldoneto.vendas.enums.StatusPedido;
+import io.github.aguinaldoneto.vendas.exception.PedidoNaoEncontradoException;
 import io.github.aguinaldoneto.vendas.exception.RegraNegocioException;
 import io.github.aguinaldoneto.vendas.repository.ClienteRepository;
 import io.github.aguinaldoneto.vendas.repository.ItemPedidoRepository;
@@ -48,6 +50,7 @@ public class PedidoServiceImpl implements PedidoService {
         pedido.setCliente(cliente); //Passar para o Cliente do pedido o Cliente otido do BD.
         pedido.setDataPedido(LocalDate.now());
         pedido.setTotal(dto.getTotal());
+        pedido.setStatus(StatusPedido.REALIZADO);
 
         List<ItemPedido> itemsPedido = converterItems(pedido, dto.getItems());
         repository.save(pedido);
@@ -59,6 +62,17 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     public Optional<Pedido> obterPedidoCompleto(Integer id) {
         return repository.findByIdFetchItens(id);
+    }
+
+    @Override
+    @Transactional
+    public void atualizaStatus(Integer id, StatusPedido statusPedido) {
+        repository
+                .findById(id)
+                .map(pedido -> {
+                    pedido.setStatus(statusPedido);
+                    return repository.save(pedido);
+                }).orElseThrow(() -> new PedidoNaoEncontradoException());
     }
 
     private List<ItemPedido> converterItems(Pedido pedido, List<ItemPedidoDTO> items) {
